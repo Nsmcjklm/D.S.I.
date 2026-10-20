@@ -1,5 +1,5 @@
 /* =========================================================
-   D.S.I. Informatique, interactions
+   D.S.I. Informatique — interactions
    ========================================================= */
 (() => {
   "use strict";
@@ -63,6 +63,26 @@
       }
     });
   }, { passive: true });
+
+  /* ---------- Compteur 1995 : défile depuis 1970 ---------- */
+  const countObs = new IntersectionObserver((entries, obs) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      obs.unobserve(entry.target);
+      if (reduceMotion) return;
+      const el = entry.target;
+      const end = Number(el.dataset.count);
+      const from = end - 25;
+      const start = performance.now();
+      const step = (now) => {
+        const p = Math.min((now - start) / 1400, 1);
+        el.textContent = Math.round(from + (end - from) * (1 - Math.pow(1 - p, 4)));
+        if (p < 1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }, { threshold: 0.6 });
+  document.querySelectorAll("[data-count]").forEach((el) => countObs.observe(el));
 
   /* ---------- Léger parallaxe sur les images ---------- */
   const parallax = [...document.querySelectorAll("[data-parallax]")];
@@ -188,23 +208,10 @@
 
     // Sinon : ouverture de la messagerie du visiteur, message pré-rempli
     window.location.href =
-      `mailto:${EMAIL}?subject=${encodeURIComponent(`[Site] ${data.subject} (${data.name})`)}&body=${encodeURIComponent(body)}`;
+      `mailto:${EMAIL}?subject=${encodeURIComponent(`[Site] ${data.subject} — ${data.name}`)}&body=${encodeURIComponent(body)}`;
     status.textContent = "Votre messagerie s'ouvre avec le message prêt à envoyer.";
     status.classList.add("ok");
   });
-
-  /* ---------- Plan Google Maps chargé seulement au clic ---------- */
-  const loadMap = document.getElementById("loadMap");
-  if (loadMap) {
-    loadMap.addEventListener("click", () => {
-      const iframe = document.createElement("iframe");
-      iframe.title = "Plan d'accès : D.S.I. Informatique, 10 rue Olivette, Béziers";
-      iframe.src = "https://www.google.com/maps?q=10+rue+Olivette,+34500+B%C3%A9ziers&z=16&output=embed";
-      iframe.loading = "lazy";
-      iframe.referrerPolicy = "no-referrer-when-downgrade";
-      document.getElementById("map").replaceChildren(iframe);
-    });
-  }
 
   document.getElementById("year").textContent = new Date().getFullYear();
 })();
